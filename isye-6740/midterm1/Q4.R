@@ -1,5 +1,7 @@
 library(magick)
 
+################################# Part 1; Eigenfaces
+
 ### image viewer function
 view_image <- function(pixel_matrix) {
   par(mar=rep(0, 4))
@@ -12,7 +14,7 @@ image_preprocess <- function(fp) {
   # read image and convert to matrix
   image_mat <-
     image_read(fp) %>% 
-    image_flip() %>% 
+    image_flip() %>%
     image_data(channels = 'gray') %>% 
     as.vector() %>% 
     as.numeric() %>% 
@@ -46,3 +48,52 @@ for(i in 1:length(subject14_fp)) {
 ### Multiply both by their transpose to make square matrices
 subject01_sqmat <- subject01_mat%*%t(subject01_mat)
 subject14_sqmat <- subject14_mat%*%t(subject14_mat)
+
+### Perform eigen-decomposition on the swaure face matrices
+eigen_01 <- eigen(subject01_sqmat)
+eigen_14 <- eigen(subject14_sqmat)
+
+### Grab top 6 eigenfaces for each subject and plot them
+matrix(eigen_01$vectors[, 1], 80, 60) %>% view_image()
+matrix(eigen_14$vectors[, 1], 80, 60) %>% view_image()
+
+matrix(eigen_01$vectors[, 2], 80, 60) %>% view_image()
+matrix(eigen_14$vectors[, 2], 80, 60) %>% view_image()
+
+matrix(eigen_01$vectors[, 3], 80, 60) %>% view_image()
+matrix(eigen_14$vectors[, 3], 80, 60) %>% view_image()
+
+matrix(eigen_01$vectors[, 4], 80, 60) %>% view_image()
+matrix(eigen_14$vectors[, 4], 80, 60) %>% view_image()
+
+matrix(eigen_01$vectors[, 5], 80, 60) %>% view_image()
+matrix(eigen_14$vectors[, 5], 80, 60) %>% view_image()
+
+matrix(eigen_01$vectors[, 6], 80, 60) %>% view_image()
+matrix(eigen_14$vectors[, 6], 80, 60) %>% view_image()
+
+
+####################################### Part 2; Facial Recognition
+
+### Projection function (cosine similarity)
+cosine_similarity <- function(vec1, vec2) {
+  l2_norm <- function(vec) {
+    sqrt(sum(vec**2))
+  }
+  (vec1 %*% vec2) / (l2_norm(vec1)*l2_norm(vec2))
+}
+
+### Grab top eigenfaces for each subject
+subject01_topeigen <- eigen_01$vectors[, 1]
+subject14_topeigen <- eigen_14$vectors[, 1]
+
+### Get vectors for test images
+subject01_test <- image_preprocess('yalefaces/subject01-test.gif')
+subject14_test <- image_preprocess('yalefaces/subject14-test.gif')
+
+### Get the four similarity scores
+cosine_similarity(subject01_test, subject01_topeigen)
+cosine_similarity(subject01_test, subject14_topeigen)
+cosine_similarity(subject14_test, subject01_topeigen)
+cosine_similarity(subject14_test, subject14_topeigen)
+
